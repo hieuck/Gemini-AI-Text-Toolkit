@@ -1,15 +1,47 @@
+// Fix: Export `getReplyStyles` to resolve an import error in `ReplyStyleModal.tsx` and refactor to avoid code duplication.
+export const getReplyStyles = (t: (key: string) => string) => [
+  { 
+    id: 'reply-neutral', 
+    label: t('processor.replyStyles.neutral'), 
+    prompt: t('processor.replyStyles.neutralPrompt') 
+  },
+  { 
+    id: 'reply-friendly', 
+    label: t('processor.replyStyles.friendly'), 
+    prompt: t('processor.replyStyles.friendlyPrompt') 
+  },
+  { 
+    id: 'reply-sarcastic', 
+    label: t('processor.replyStyles.sarcastic'), 
+    prompt: t('processor.replyStyles.sarcasticPrompt') 
+  },
+];
+
 export const getPredefinedPrompts = (t: (key: string) => string) => [
   { 
     id: 'summarize', 
     label: t('processor.prompts.summarize'), 
-    prompt: 'Summarize the following text concisely, providing the key points in a bulleted list:',
+    prompt: t('processor.prompts.summarizePrompt'),
     icon: 'summarize' as const,
+  },
+  { 
+    id: 'expand-text', 
+    label: t('processor.prompts.expandText'), 
+    prompt: t('processor.prompts.expandTextPrompt'),
+    icon: 'expand' as const,
   },
   { 
     id: 'reply-ai', 
     label: t('processor.prompts.replyAI'), 
-    prompt: 'Generate a thoughtful and relevant reply to the following text:',
+    prompt: t('processor.prompts.replyAIPrompt'),
     icon: 'reply' as const,
+  },
+  { 
+    id: 'quick-reply', 
+    label: t('processor.prompts.quickReply'), 
+    isMenu: true,
+    icon: 'reply' as const,
+    subActions: getReplyStyles(t)
   },
   {
     id: 'translate',
@@ -37,19 +69,19 @@ export const getPredefinedPrompts = (t: (key: string) => string) => [
   { 
     id: 'fix-grammar', 
     label: t('processor.prompts.fixGrammar'), 
-    prompt: 'Correct any grammatical errors and spelling mistakes in the following text. Return only the corrected text.',
+    prompt: t('processor.prompts.fixGrammarPrompt'),
     icon: 'grammar' as const,
   },
   { 
     id: 'explain-like-im-5', 
     label: t('processor.prompts.explainLikeIm5'), 
-    prompt: 'Explain the following concept as if I were a 5-year-old:',
+    prompt: t('processor.prompts.explainLikeIm5Prompt'),
     icon: 'explain' as const,
   },
   { 
     id: 'json-converter', 
     label: t('processor.prompts.jsonConverter'), 
-    prompt: 'Extract the key information from the following text and format it as a JSON object:',
+    prompt: t('processor.prompts.jsonConverterPrompt'),
     icon: 'json' as const,
   },
 ];
