@@ -20,6 +20,10 @@ function getChatInstance(): Chat {
     return chat;
 }
 
+export function resetChat(): void {
+    chat = null;
+}
+
 export async function getChatResponse(message: string): Promise<string> {
     try {
         const chatInstance = getChatInstance();

@@ -12,21 +12,21 @@ const App: React.FC = () => {
   const { t, language, setLanguage } = useTranslation();
   const { themeSetting, setThemeSetting } = useTheme();
 
-  const NavButton = useMemo(() => {
-    return <T,>({ view, label, icon }: { view: View, label: string, icon: 'chat' | 'sparkles' }) => (
-      <button
-        onClick={() => setActiveView(view)}
-        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
-          activeView === view
-            ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
-            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
-        }`}
-      >
-        <Icon name={icon} className="w-5 h-5" />
-        {label}
-      </button>
-    );
-  }, [activeView]);
+  const NavButton = useCallback(({ view, label, icon }: { view: View, label: string, icon: 'chat' | 'sparkles' }) => (
+    <button
+      onClick={() => setActiveView(view)}
+      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-md ${
+        activeView === view
+          ? 'bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm'
+          : 'text-gray-500 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/30'
+      }`}
+      aria-current={activeView === view}
+    >
+      <Icon name={icon} className="w-5 h-5" />
+      {label}
+    </button>
+  ), [activeView]);
+
 
   const handleThemeChange = useCallback(() => {
     const sequence: ('auto' | 'light' | 'dark')[] = ['auto', 'light', 'dark'];
@@ -47,48 +47,52 @@ const App: React.FC = () => {
      return t('app.themeDark');
   }, [themeSetting, t]);
 
+  const handleLanguageChange = useCallback(() => {
+    setLanguage(language === 'en' ? 'vi' : 'en');
+  }, [language, setLanguage]);
+
+
   return (
-    <div className="flex flex-col h-screen antialiased bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <header className="flex items-center justify-between bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+    <div className="flex flex-col h-screen antialiased bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+      <header className="flex items-center justify-between bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50 p-3 sticky top-0 z-20">
         <div className="w-1/4"></div> {/* Spacer */}
-        <h1 className="w-1/2 text-xl text-center font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500">
+        <h1 className="w-1/2 text-lg text-center font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500">
           {t('app.title')}
         </h1>
-        <div className="w-1/4 flex justify-end items-center gap-4">
+        <div className="w-1/4 flex justify-end items-center gap-2">
           <button
             onClick={handleThemeChange}
-            className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800 focus:ring-blue-500"
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800 focus:ring-blue-500"
             aria-label={`${t('app.themeToggle')}: ${themeLabel}`}
+            title={`${t('app.themeToggle')}: ${themeLabel}`}
           >
             <Icon name={themeIcon} className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as 'en' | 'vi')}
-            className="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Select language"
+          <button
+            onClick={handleLanguageChange}
+            className="p-2 w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800 focus:ring-blue-500"
+            aria-label="Change language"
+            title="Change language"
           >
-            <option value="en">English</option>
-            <option value="vi">Tiếng Việt</option>
-          </select>
+            <span className="text-xs font-bold text-gray-600 dark:text-gray-400">{language.toUpperCase()}</span>
+          </button>
         </div>
       </header>
       
       <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex border-b border-gray-200 dark:border-gray-700">
-          <NavButton view="chat" label={t('app.navChat')} icon="chat" />
-          <NavButton view="processor" label={t('app.navProcessor')} icon="sparkles" />
+        <div className="p-2">
+            <div className="flex items-center bg-gray-200 dark:bg-gray-800 rounded-lg p-1 gap-1 max-w-sm mx-auto">
+                <NavButton view="chat" label={t('app.navChat')} icon="chat" />
+                <NavButton view="processor" label={t('app.navProcessor')} icon="sparkles" />
+            </div>
         </div>
+
 
         <div className="flex-1 overflow-y-auto">
           {activeView === 'chat' && <ChatBot />}
           {activeView === 'processor' && <TextProcessor />}
         </div>
       </main>
-      
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-center p-2 text-xs text-gray-500">
-        {t('app.footer')}
-      </footer>
     </div>
   );
 };

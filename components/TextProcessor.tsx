@@ -105,7 +105,9 @@ const TextProcessor: React.FC = () => {
     setIsRecognitionReady(true);
 
     return () => {
-        recognition.stop();
+        if (recognition) {
+            recognition.stop();
+        }
     }
   }, [language]);
 
@@ -182,121 +184,116 @@ const TextProcessor: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4">
-        {/* Input Section */}
-        <div className="w-full flex flex-col gap-4">
-          <div className="flex items-center justify-between min-h-9">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto flex flex-col gap-6">
+      {/* Input and Output Section */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Input Column */}
+        <div className="flex flex-col gap-2">
             <label htmlFor="inputText" className="font-semibold text-gray-700 dark:text-gray-300">
-              {t('processor.inputTextLabel')}
+                {t('processor.inputTextLabel')}
             </label>
-            <div className="flex items-center gap-2">
-              {isPasteReady && (
-                <button
-                  onClick={handlePasteFromClipboard}
-                  className="p-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 dark:focus-visible:ring-offset-gray-900 focus-visible:ring-blue-400 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
-                  aria-label={t('processor.pasteFromClipboard')}
-                  disabled={isLoading}
-                >
-                  <Icon name="paste" className="w-5 h-5" />
-                </button>
-              )}
-              {isRecognitionReady && (
-                <button
-                  onClick={handleToggleRecording}
-                  className={`p-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 dark:focus-visible:ring-offset-gray-900 focus-visible:ring-blue-400 ${
-                      isRecording 
-                      ? 'bg-red-600 text-white animate-pulse' 
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
-                  aria-label={t(isRecording ? 'processor.stopRecording' : 'processor.startRecording')}
-                  disabled={isLoading}
-                >
-                  <Icon name="microphone" className="w-5 h-5" />
-                </button>
-              )}
+            <div className="relative flex-1 flex">
+                <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
+                    {hasContent && (
+                        <button
+                            onClick={handleClearAll}
+                            className="p-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-800 focus-visible:ring-blue-400 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-red-200 dark:hover:bg-red-800/50 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50"
+                            aria-label={t('processor.prompts.clearAll')}
+                            title={t('processor.prompts.clearAll')}
+                            disabled={isLoading}
+                        >
+                            <Icon name="trash" className="w-5 h-5" />
+                        </button>
+                    )}
+                    {isPasteReady && (
+                        <button
+                            onClick={handlePasteFromClipboard}
+                            className="p-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-800 focus-visible:ring-blue-400 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
+                            aria-label={t('processor.pasteFromClipboard')}
+                            title={t('processor.pasteFromClipboard')}
+                            disabled={isLoading}
+                        >
+                            <Icon name="paste" className="w-5 h-5" />
+                        </button>
+                    )}
+                    {isRecognitionReady && (
+                        <button
+                            onClick={handleToggleRecording}
+                            className={`p-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-800 focus-visible:ring-blue-400 ${
+                                isRecording 
+                                ? 'bg-red-600 text-white animate-pulse' 
+                                : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                            }`}
+                            aria-label={t(isRecording ? 'processor.stopRecording' : 'processor.startRecording')}
+                            title={t(isRecording ? 'processor.stopRecording' : 'processor.startRecording')}
+                            disabled={isLoading}
+                        >
+                            <Icon name="microphone" className="w-5 h-5" />
+                        </button>
+                    )}
+                </div>
+                <textarea
+                    id="inputText"
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder={t('processor.inputPlaceholder')}
+                    className="w-full min-h-[20rem] p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm"
+                    disabled={isLoading}
+                />
             </div>
-          </div>
-          <textarea
-            id="inputText"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder={t('processor.inputPlaceholder')}
-            className="w-full h-48 md:h-64 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-            disabled={isLoading}
-          />
         </div>
-
-        {/* Output Section */}
-        <div className="w-full flex flex-col gap-4">
-          <div className="flex items-center justify-between min-h-9">
-            <label htmlFor="outputText" className="font-semibold text-gray-700 dark:text-gray-300">
-              {t('processor.outputTextLabel')}
-            </label>
-            <button
-              onClick={handleCopyToClipboard}
-              disabled={!output || isLoading || isCopied}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 dark:focus-visible:ring-offset-gray-900 focus-visible:ring-blue-400 ${
-                isCopied
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-              aria-label={isCopied ? t('processor.copied') : t('processor.copyToClipboard')}
+        {/* Output Column */}
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+                <label className="font-semibold text-gray-700 dark:text-gray-300">
+                    {t('processor.outputTextLabel')}
+                </label>
+                <button
+                    onClick={handleCopyToClipboard}
+                    disabled={!output || isLoading || isCopied}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-800 focus-visible:ring-blue-400 ${
+                    isCopied
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    aria-label={isCopied ? t('processor.copied') : t('processor.copyToClipboard')}
+                    >
+                    <Icon name={isCopied ? 'check' : 'copy'} className="w-4 h-4" />
+                    {isCopied ? t('processor.copied') : t('processor.copy')}
+                </button>
+            </div>
+            <div
+                id="outputText"
+                className="w-full flex-1 p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl overflow-y-auto shadow-sm"
             >
-              <Icon name={isCopied ? 'check' : 'copy'} className="w-4 h-4" />
-              {isCopied ? t('processor.copied') : t('processor.copy')}
-            </button>
-          </div>
-          <div
-            id="outputText"
-            className="w-full h-48 md:h-64 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 overflow-y-auto"
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <Spinner />
-              </div>
-            ) : (
-              <pre className="whitespace-pre-wrap text-sm">{output}</pre>
-            )}
-          </div>
+                {isLoading ? (
+                <div className="flex items-center justify-center h-full min-h-[20rem]">
+                    <Spinner />
+                </div>
+                ) : (
+                <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">{output || <span className="text-gray-400 dark:text-gray-500">{t('processor.outputPlaceholder')}</span>}</pre>
+                )}
+            </div>
         </div>
       </div>
-
-       {/* Clear All Button */}
-       <div className="flex justify-center py-2">
-           <button
-            onClick={handleClearAll}
-            disabled={isLoading || !hasContent}
-            className="group p-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:border-red-500/60 dark:hover:border-red-700/60 hover:bg-red-100/50 dark:hover:bg-red-900/50"
-            aria-label={t('processor.prompts.clearAll')}
-          >
-            <Icon 
-              name="trash" 
-              className={`w-5 h-5 transition-colors ${hasContent ? 'text-red-500 group-hover:text-red-600 dark:group-hover:text-white' : 'text-gray-400 dark:text-gray-500'}`} 
-            />
-          </button>
-      </div>
-
+      
       {/* Controls Section */}
-      <div className="space-y-2 pt-4">
-        <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('processor.actionLabel')}</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+      <div className="space-y-4">
+        <h3 className="font-semibold text-center text-gray-700 dark:text-gray-300 mb-3">{t('processor.actionLabel')}</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-3">
           {PROMPTS.map((prompt) =>
             prompt.isMenu ? (
-              <div key={prompt.id} className="relative sm:col-span-1 md:col-span-1">
+              <div key={prompt.id} className="relative">
                 <button
                   onClick={() => toggleMenu(prompt.id)}
                   disabled={isLoading || !inputText.trim()}
-                  className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full flex flex-col items-center justify-center text-center gap-2 p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon name={prompt.icon} className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">{prompt.label}</span>
-                  </div>
-                  <Icon name="chevron-down" className={`w-5 h-5 transition-transform ${openMenu === prompt.id ? 'rotate-180' : ''}`} />
+                  <Icon name={prompt.icon} className="w-6 h-6 text-blue-500" />
+                  <span className="text-sm font-medium">{prompt.label}</span>
                 </button>
                 {openMenu === prompt.id && (
-                  <div className="absolute bottom-full left-0 w-full mb-2 z-10">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 mb-2 z-20">
                     <div className="flex flex-col p-2 bg-white dark:bg-gray-700 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600">
                       {prompt.id === 'translate' && (
                         <div className="relative p-1">
@@ -339,10 +336,10 @@ const TextProcessor: React.FC = () => {
                 key={prompt.id}
                 onClick={() => handleActionClick(prompt.prompt || '')}
                 disabled={isLoading || !inputText.trim()}
-                className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex flex-col items-center justify-center text-center gap-2 p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <Icon name={prompt.icon} className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                <span className="font-medium">{prompt.label}</span>
+                <Icon name={prompt.icon} className="w-6 h-6 text-blue-500" />
+                <span className="text-sm font-medium">{prompt.label}</span>
               </button>
             )
           )}

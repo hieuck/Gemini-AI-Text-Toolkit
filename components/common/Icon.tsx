@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface IconProps {
-  name: 'send' | 'sparkles' | 'chat' | 'user' | 'summarize' | 'reply' | 'translate' | 'grammar' | 'explain' | 'json' | 'chevron-down' | 'search' | 'microphone' | 'copy' | 'check' | 'clear' | 'paste' | 'close' | 'trash' | 'expand' | 'sun' | 'moon' | 'desktop';
+  name: 'send' | 'sparkles' | 'chat' | 'user' | 'summarize' | 'reply' | 'translate' | 'grammar' | 'explain' | 'json' | 'chevron-down' | 'search' | 'microphone' | 'copy' | 'check' | 'clear' | 'paste' | 'close' | 'trash' | 'expand' | 'sun' | 'moon' | 'desktop' | 'refresh';
   className?: string;
 }
 
@@ -123,6 +123,11 @@ export const Icon: React.FC<IconProps> = ({ name, className = 'w-6 h-6' }) => {
     desktop: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" />
+      </svg>
+    ),
+    refresh: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-4.991-2.696L19.015 5.982a8.25 8.25 0 00-11.664 0L2.985 9.348z" />
       </svg>
     ),
   };
