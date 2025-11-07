@@ -1,57 +1,25 @@
-const CACHE_NAME = 'gemini-toolkit-v1';
+const CACHE_NAME = 'gemini-toolkit-v2'; // Version bump to ensure the new service worker activates
 const urlsToCache = [
   '/',
   '/index.html',
   '/index.tsx',
-  // External assets will be cached on first fetch by the fetch event handler
+  '/manifest.json',
+  // Add the main CDN script to be pre-cached. Others will be cached on first use.
+  'https://cdn.tailwindcss.com',
 ];
 
-// Install a service worker
+// Install event: open cache and add core files.
 self.addEventListener('install', event => {
-  // Perform install steps
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
+        console.log('Service Worker: Caching app shell');
         return cache.addAll(urlsToCache);
       })
   );
 });
 
-// Cache and return requests
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then(
-          response => {
-            // Check if we received a valid response
-            if (!response || (response.status !== 200 && response.type !== 'opaque')) {
-              return response;
-            }
-
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          }
-        );
-      })
-  );
-});
-
-// Update a service worker
+// Activate event: clean up old caches.
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
@@ -64,5 +32,40 @@ self.addEventListener('activate', event => {
         })
       );
     })
+  );
+});
+
+// Fetch event: serve from cache or fetch from network.
+self.addEventListener('fetch', event => {
+  // For non-GET requests (like API POST calls), do not cache, just fetch from the network.
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // For GET requests, use a "cache-first, then network" strategy.
+  event.respondWith(
+    caches.match(event.request)
+      .then(cachedResponse => {
+        // If the request is in the cache, return the cached response.
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        // If the request is not in the cache, fetch it from the network.
+        return fetch(event.request.clone()).then(networkResponse => {
+          // We'll cache the new response for future use.
+          // Check for a valid response (status 200). We also check for 'cors' type for CDN assets.
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+          }
+          // Return the network response.
+          return networkResponse;
+        });
+      })
   );
 });
