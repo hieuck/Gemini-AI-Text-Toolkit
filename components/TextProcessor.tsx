@@ -1,46 +1,11 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+// Fix: Import SpeechRecognition type to resolve TypeScript error.
+import { SpeechRecognition } from '../types';
 import { getPredefinedPrompts } from '../constants';
 import { processText } from '../services/geminiService';
 import { Icon } from './common/Icon';
 import { Spinner } from './common/Spinner';
 import { useTranslation } from '../contexts/LanguageContext';
-
-// Fix: Add types for the Web Speech API to resolve TypeScript errors.
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-interface SpeechRecognitionResult {
-  [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-interface SpeechRecognitionResultList {
-  [index: number]: SpeechRecognitionResult;
-  length: number;
-}
-interface SpeechRecognitionEvent {
-  results: SpeechRecognitionResultList;
-}
-interface SpeechRecognitionErrorEvent {
-  error: string;
-}
-interface SpeechRecognition {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onstart: () => void;
-  onend: () => void;
-  onerror: (event: SpeechRecognitionErrorEvent) => void;
-  onresult: (event: SpeechRecognitionEvent) => void;
-  start: () => void;
-  stop: () => void;
-}
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
-}
 
 const TextProcessor: React.FC = () => {
   const [inputText, setInputText] = useState('');

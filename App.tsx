@@ -89,8 +89,12 @@ const App: React.FC = () => {
 
 
         <div className="flex-1 overflow-y-auto">
-          {activeView === 'chat' && <ChatBot />}
-          {activeView === 'processor' && <TextProcessor />}
+          <div className={activeView === 'chat' ? 'h-full' : 'hidden'}>
+            <ChatBot />
+          </div>
+          <div className={activeView === 'processor' ? 'h-full' : 'hidden'}>
+            <TextProcessor />
+          </div>
         </div>
       </main>
     </div>
