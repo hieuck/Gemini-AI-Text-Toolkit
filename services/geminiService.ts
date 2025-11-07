@@ -21,7 +21,12 @@ function getChatInstance(): Chat {
 }
 
 export function resetChat(): void {
-    chat = null;
+    // Fix: Proactively create a new chat instance instead of setting to null.
+    // This ensures the conversation history is definitively cleared.
+    chat = ai.chats.create({
+        model: 'gemini-2.5-flash',
+        history: [],
+    });
 }
 
 export async function getChatResponse(message: string): Promise<string> {

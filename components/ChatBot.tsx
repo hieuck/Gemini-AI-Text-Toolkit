@@ -118,16 +118,17 @@ const ChatBot: React.FC = () => {
   useEffect(() => {
     if (inputRef.current) {
         const textarea = inputRef.current;
-        textarea.style.height = 'auto';
+        textarea.style.height = 'auto'; // Reset height
         
         const scrollHeight = textarea.scrollHeight;
         const maxHeight = 160; // Corresponds to max-h-40
+        
+        textarea.style.height = `${scrollHeight}px`; // Set height to content height
         
         if (scrollHeight > maxHeight) {
             textarea.style.height = `${maxHeight}px`;
             textarea.style.overflowY = 'auto';
         } else {
-            textarea.style.height = `${scrollHeight}px`;
             textarea.style.overflowY = 'hidden';
         }
     }
@@ -183,22 +184,35 @@ const ChatBot: React.FC = () => {
   };
 
 
-  const WelcomeScreen: React.FC = () => (
-    <div className="flex flex-col items-center justify-center h-full text-center p-4">
-      <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-        <Icon name="sparkles" className="w-8 h-8 text-white" />
+  const WelcomeScreen: React.FC = () => {
+    const [randomPrompts, setRandomPrompts] = useState<string[]>([]);
+
+    useEffect(() => {
+        // The t function is typed to return string, but we know it can return an array for this key.
+        const allPrompts = t('chat.welcome.prompts') as unknown as string[];
+        
+        // Shuffle the array and pick the first 3 prompts
+        const shuffled = [...allPrompts].sort(() => 0.5 - Math.random());
+        setRandomPrompts(shuffled.slice(0, 3));
+    }, [t]); // Re-run when language changes
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-4">
+        <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+          <Icon name="sparkles" className="w-8 h-8 text-white" />
+        </div>
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">{t('chat.welcome.title')}</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">Start a conversation or try one of these prompts.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl">
+          {randomPrompts.map(prompt => (
+              <button key={prompt} onClick={() => setInput(prompt)} className="p-3 bg-gray-200/50 dark:bg-gray-800/50 rounded-lg text-sm text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors h-full">
+                  {prompt}
+              </button>
+          ))}
+        </div>
       </div>
-      <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">{t('chat.welcome.title')}</h2>
-      <p className="text-gray-500 dark:text-gray-400 mb-8">Start a conversation or try one of these prompts.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl">
-        {[t('chat.welcome.prompt1'), t('chat.welcome.prompt2'), t('chat.welcome.prompt3')].map(prompt => (
-            <button key={prompt} onClick={() => setInput(prompt)} className="p-3 bg-gray-200/50 dark:bg-gray-800/50 rounded-lg text-sm text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
-                {prompt}
-            </button>
-        ))}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
@@ -274,7 +288,7 @@ const ChatBot: React.FC = () => {
                 }
             }}
             placeholder={t('chat.placeholder')}
-            className="flex-1 px-4 py-3 pr-24 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-2xl text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-14 max-h-40"
+            className="flex-1 px-4 py-3 pr-24 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-2xl text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[4.5rem] max-h-40"
             disabled={isLoading}
           />
           <div className="absolute bottom-2 right-2 flex items-center gap-1">

@@ -1,0 +1,16 @@
+{
+  "short_name": "Gemini Toolkit",
+  "name": "Gemini AI Text Toolkit",
+  "description": "An extension-like tool featuring a chat bot and a text processor powered by Gemini. Ask questions, get summaries, translate text, and more.",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#111827",
+  "background_color": "#111827"
+}
