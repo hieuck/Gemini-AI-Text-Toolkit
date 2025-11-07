@@ -1,9 +1,46 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { getPredefinedPrompts } from '../constants';
 import { processText } from '../services/geminiService';
 import { Icon } from './common/Icon';
 import { Spinner } from './common/Spinner';
 import { useTranslation } from '../contexts/LanguageContext';
+
+// Fix: Add types for the Web Speech API to resolve TypeScript errors.
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+interface SpeechRecognitionResult {
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+interface SpeechRecognitionResultList {
+  [index: number]: SpeechRecognitionResult;
+  length: number;
+}
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+interface SpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: () => void;
+  onend: () => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  start: () => void;
+  stop: () => void;
+}
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 const TextProcessor: React.FC = () => {
   const [inputText, setInputText] = useState('');
@@ -11,7 +48,68 @@ const TextProcessor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [translationSearch, setTranslationSearch] = useState('');
-  const { t } = useTranslation();
+  const [isRecording, setIsRecording] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isRecognitionReady, setIsRecognitionReady] = useState(false);
+  const { t, language } = useTranslation();
+
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    // Fix: Remove `(window as any)` as types are now declared globally.
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn("Speech recognition not supported in this browser.");
+      setIsRecognitionReady(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = language === 'vi' ? 'vi-VN' : 'en-US';
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsRecording(false);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      // Fix: Use requestAnimationFrame to ensure the state update is handled in the next paint cycle,
+      // which can resolve rendering issues with some browser APIs.
+      requestAnimationFrame(() => {
+        setInputText(prev => prev ? `${prev} ${transcript}`.trim() : transcript);
+      });
+    };
+    
+    recognitionRef.current = recognition;
+    setIsRecognitionReady(true);
+
+    return () => {
+        recognition.stop();
+    }
+  }, [language]);
+
+
+  const handleToggleRecording = () => {
+    const recognition = recognitionRef.current;
+    if (!recognition) return;
+
+    if (isRecording) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  };
 
   const PROMPTS = useMemo(() => getPredefinedPrompts(t), [t]);
 
@@ -33,6 +131,17 @@ const TextProcessor: React.FC = () => {
     }
   }, [inputText, isLoading, t]);
 
+  const handleCopyToClipboard = useCallback(() => {
+    if (!output || isCopied) return;
+
+    navigator.clipboard.writeText(output).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+  }, [output, isCopied]);
+
   const toggleMenu = (id: string) => {
     setOpenMenu(openMenu === id ? null : id);
     if (openMenu !== id) {
@@ -45,9 +154,27 @@ const TextProcessor: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Input Section */}
         <div className="flex flex-col gap-4">
-          <label htmlFor="inputText" className="font-semibold text-gray-300">
-            {t('processor.inputTextLabel')}
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="inputText" className="font-semibold text-gray-300">
+              {t('processor.inputTextLabel')}
+            </label>
+            {isRecognitionReady ? (
+              <button
+                onClick={handleToggleRecording}
+                className={`p-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:ring-blue-400 ${
+                    isRecording 
+                    ? 'bg-red-600 text-white animate-pulse' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+                aria-label={t(isRecording ? 'processor.stopRecording' : 'processor.startRecording')}
+                disabled={isLoading}
+              >
+                <Icon name="microphone" className="w-5 h-5" />
+              </button>
+            ) : (
+              <div className="w-9 h-9" /> // Placeholder to prevent layout shift
+            )}
+          </div>
           <textarea
             id="inputText"
             value={inputText}
@@ -60,9 +187,24 @@ const TextProcessor: React.FC = () => {
 
         {/* Output Section */}
         <div className="flex flex-col gap-4">
-          <label htmlFor="outputText" className="font-semibold text-gray-300">
-            {t('processor.outputTextLabel')}
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="outputText" className="font-semibold text-gray-300">
+              {t('processor.outputTextLabel')}
+            </label>
+            <button
+              onClick={handleCopyToClipboard}
+              disabled={!output || isLoading || isCopied}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:ring-blue-400 ${
+                isCopied
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              aria-label={isCopied ? t('processor.copied') : t('processor.copyToClipboard')}
+            >
+              <Icon name={isCopied ? 'check' : 'copy'} className="w-4 h-4" />
+              {isCopied ? t('processor.copied') : t('processor.copy')}
+            </button>
+          </div>
           <div
             id="outputText"
             className="w-full h-48 md:h-64 p-3 bg-gray-800 border border-gray-600 rounded-lg text-gray-200 overflow-y-auto"

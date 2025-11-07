@@ -1,5 +1,7 @@
 {
   "name": "Gemini AI Text Toolkit",
   "description": "An extension-like tool featuring a chat bot and a text processor powered by Gemini. Ask questions, get summaries, translate text, and more.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

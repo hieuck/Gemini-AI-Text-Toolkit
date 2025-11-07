@@ -19,6 +19,11 @@ export const translations = {
       processingButton: "Processing...",
       errorMessage: "An error occurred. Please try again.",
       searchLanguagePlaceholder: "Search language...",
+      startRecording: "Start voice input",
+      stopRecording: "Stop voice input",
+      copy: "Copy",
+      copied: "Copied!",
+      copyToClipboard: "Copy to clipboard",
       prompts: {
         summarize: "Summarize",
         replyAI: "Reply with AI",
@@ -64,6 +69,11 @@ export const translations = {
       processingButton: "Đang xử lý...",
       errorMessage: "Đã có lỗi xảy ra. Vui lòng thử lại.",
       searchLanguagePlaceholder: "Tìm kiếm ngôn ngữ...",
+      startRecording: "Bắt đầu nhập giọng nói",
+      stopRecording: "Dừng nhập giọng nói",
+      copy: "Sao chép",
+      copied: "Đã chép!",
+      copyToClipboard: "Sao chép vào bộ nhớ tạm",
       prompts: {
         summarize: "Tóm tắt",
         replyAI: "Trả lời bằng AI",
