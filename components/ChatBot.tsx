@@ -5,14 +5,55 @@ import { Icon } from './common/Icon';
 import { Spinner } from './common/Spinner';
 import { useTranslation } from '../contexts/LanguageContext';
 
+// Add types for the Web Speech API
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+interface SpeechRecognitionResult {
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+interface SpeechRecognitionResultList {
+  [index: number]: SpeechRecognitionResult;
+  length: number;
+}
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+interface SpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: () => void;
+  onend: () => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  start: () => void;
+  stop: () => void;
+}
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
 const ChatBot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isRecognitionReady, setIsRecognitionReady] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { t } = useTranslation();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const { t, language } = useTranslation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -45,11 +86,9 @@ const ChatBot: React.FC = () => {
   const handleRegenerate = useCallback(async () => {
     if (isLoading) return;
     
-    // Find the last user message
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
     if (!lastUserMessage) return;
 
-    // Remove the last model response if it exists
     setMessages(prev => {
         const lastMessage = prev[prev.length - 1];
         if (lastMessage?.role === 'model') {
@@ -58,8 +97,6 @@ const ChatBot: React.FC = () => {
         return prev;
     });
 
-    // Resend the last user message
-    // Use a timeout to ensure state update has rendered before sending
     setTimeout(() => handleSend(lastUserMessage.content), 0);
   }, [messages, isLoading, handleSend]);
 
@@ -77,13 +114,74 @@ const ChatBot: React.FC = () => {
     });
   }, []);
 
+  // Effect for auto-resizing textarea
   useEffect(() => {
     if (inputRef.current) {
-        inputRef.current.style.height = 'auto';
-        const scrollHeight = inputRef.current.scrollHeight;
-        inputRef.current.style.height = `${scrollHeight}px`;
+        const textarea = inputRef.current;
+        textarea.style.height = 'auto';
+        
+        const scrollHeight = textarea.scrollHeight;
+        const maxHeight = 160; // Corresponds to max-h-40
+        
+        if (scrollHeight > maxHeight) {
+            textarea.style.height = `${maxHeight}px`;
+            textarea.style.overflowY = 'auto';
+        } else {
+            textarea.style.height = `${scrollHeight}px`;
+            textarea.style.overflowY = 'hidden';
+        }
     }
   }, [input]);
+  
+  // Effect for initializing Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn("Speech recognition not supported in this browser.");
+      setIsRecognitionReady(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = language === 'vi' ? 'vi-VN' : 'en-US';
+
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsRecording(false);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      requestAnimationFrame(() => {
+        setInput(prev => prev ? `${prev} ${transcript}`.trim() : transcript);
+      });
+    };
+    
+    recognitionRef.current = recognition;
+    setIsRecognitionReady(true);
+
+    return () => {
+        if (recognition) {
+            recognition.stop();
+        }
+    }
+  }, [language]);
+
+  const handleToggleRecording = () => {
+    const recognition = recognitionRef.current;
+    if (!recognition) return;
+
+    if (isRecording) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  };
+
 
   const WelcomeScreen: React.FC = () => (
     <div className="flex flex-col items-center justify-center h-full text-center p-4">
@@ -164,7 +262,7 @@ const ChatBot: React.FC = () => {
       </div>
 
       <div className="p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700/50">
-        <div className="relative">
+        <div className="relative flex items-end">
           <textarea
             ref={inputRef}
             value={input}
@@ -176,15 +274,29 @@ const ChatBot: React.FC = () => {
                 }
             }}
             placeholder={t('chat.placeholder')}
-            className="w-full pl-4 pr-12 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-2xl text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none max-h-40"
-            rows={1}
+            className="flex-1 px-4 py-3 pr-24 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-2xl text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-14 max-h-40"
             disabled={isLoading}
           />
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2.5">
+          <div className="absolute bottom-2 right-2 flex items-center gap-1">
+            {isRecognitionReady && (
+                <button
+                    onClick={handleToggleRecording}
+                    className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        isRecording 
+                        ? 'bg-red-600 text-white animate-pulse' 
+                        : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                    }`}
+                    aria-label={t(isRecording ? 'processor.stopRecording' : 'processor.startRecording')}
+                    title={t(isRecording ? 'processor.stopRecording' : 'processor.startRecording')}
+                    disabled={isLoading}
+                >
+                    <Icon name="microphone" className="w-5 h-5" />
+                </button>
+            )}
             <button
                 onClick={() => handleSend(input)}
                 disabled={isLoading || input.trim() === ''}
-                className="p-2 rounded-full text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Send message"
             >
                 <Icon name="send" className="w-5 h-5" />
