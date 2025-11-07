@@ -5,6 +5,10 @@ export const translations = {
       navChat: "Chat Bot",
       navProcessor: "Text Tool",
       footer: "Powered by Google Gemini",
+      themeLight: "Light",
+      themeDark: "Dark",
+      themeAuto: "Auto",
+      themeToggle: "Change theme",
     },
     chat: {
       placeholder: "Ask anything...",
@@ -77,6 +81,10 @@ export const translations = {
       navChat: "Trò chuyện Bot",
       navProcessor: "Công cụ văn bản",
       footer: "Phát triển bởi Google Gemini",
+      themeLight: "Sáng",
+      themeDark: "Tối",
+      themeAuto: "Tự động",
+      themeToggle: "Đổi giao diện",
     },
     chat: {
       placeholder: "Hỏi bất cứ điều gì...",

@@ -25,18 +25,18 @@ export const ReplyStyleModal: React.FC<ReplyStyleModalProps> = ({ isOpen, onClos
       role="dialog"
     >
       <div 
-        className="relative bg-gray-800 rounded-xl shadow-2xl p-6 m-4 w-full max-w-md border border-gray-700 transform transition-all"
+        className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 m-4 w-full max-w-md border border-gray-200 dark:border-gray-700 transform transition-all"
         onClick={(e) => e.stopPropagation()} // Prevent closing modal when clicking inside
       >
         <button
             onClick={onClose}
-            className="absolute top-3 right-3 p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors"
+            className="absolute top-3 right-3 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             aria-label="Close"
         >
             <Icon name="close" className="w-5 h-5" />
         </button>
 
-        <h2 className="text-xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
+        <h2 className="text-xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 mb-6">
           {t('processor.replyModal.title')}
         </h2>
         
@@ -45,7 +45,7 @@ export const ReplyStyleModal: React.FC<ReplyStyleModalProps> = ({ isOpen, onClos
             <button
               key={style.id}
               onClick={() => onSelectStyle(style.prompt)}
-              className="w-full p-4 bg-gray-700 text-gray-200 rounded-lg font-semibold text-center hover:bg-blue-600 hover:text-white transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+              className="w-full p-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold text-center hover:bg-blue-600 hover:text-white transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
             >
               {style.label}
             </button>
