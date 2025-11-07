@@ -154,7 +154,7 @@ const TextProcessor: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Input Section */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between min-h-9">
             <label htmlFor="inputText" className="font-semibold text-gray-300">
               {t('processor.inputTextLabel')}
             </label>
@@ -187,7 +187,7 @@ const TextProcessor: React.FC = () => {
 
         {/* Output Section */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between min-h-9">
             <label htmlFor="outputText" className="font-semibold text-gray-300">
               {t('processor.outputTextLabel')}
             </label>
