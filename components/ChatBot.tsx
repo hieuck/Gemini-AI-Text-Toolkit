@@ -1,46 +1,45 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ChatMessage } from '../types';
+// Fix: Import SpeechRecognition type to resolve TypeScript error.
+import { ChatMessage, SpeechRecognition } from '../types';
 import { getChatResponse, resetChat } from '../services/geminiService';
 import { Icon } from './common/Icon';
 import { Spinner } from './common/Spinner';
 import { useTranslation } from '../contexts/LanguageContext';
 
-// Add types for the Web Speech API
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
+interface WelcomeScreenProps {
+  onPromptClick: (prompt: string) => void;
 }
-interface SpeechRecognitionResult {
-  [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-interface SpeechRecognitionResultList {
-  [index: number]: SpeechRecognitionResult;
-  length: number;
-}
-interface SpeechRecognitionEvent {
-  results: SpeechRecognitionResultList;
-}
-interface SpeechRecognitionErrorEvent {
-  error: string;
-}
-interface SpeechRecognition {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onstart: () => void;
-  onend: () => void;
-  onerror: (event: SpeechRecognitionErrorEvent) => void;
-  onresult: (event: SpeechRecognitionEvent) => void;
-  start: () => void;
-  stop: () => void;
-}
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
-}
+
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onPromptClick }) => {
+  const { t } = useTranslation();
+  const [randomPrompts, setRandomPrompts] = useState<string[]>([]);
+
+  useEffect(() => {
+    // The t function is typed to return string, but we know it can return an array for this key.
+    const allPrompts = t('chat.welcome.prompts') as unknown as string[];
+    
+    // Shuffle the array and pick the first 3 prompts
+    const shuffled = [...allPrompts].sort(() => 0.5 - Math.random());
+    setRandomPrompts(shuffled.slice(0, 3));
+  }, [t]); // Re-run when language changes
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+      <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+        <Icon name="sparkles" className="w-8 h-8 text-white" />
+      </div>
+      <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">{t('chat.welcome.title')}</h2>
+      <p className="text-gray-500 dark:text-gray-400 mb-8">Start a conversation or try one of these prompts.</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl">
+        {randomPrompts.map(prompt => (
+            <button key={prompt} onClick={() => onPromptClick(prompt)} className="p-3 bg-gray-200/50 dark:bg-gray-800/50 rounded-lg text-sm text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors h-full">
+                {prompt}
+            </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const ChatBot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -80,6 +79,9 @@ const ChatBot: React.FC = () => {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
     }
   }, [isLoading, t]);
 
@@ -183,37 +185,6 @@ const ChatBot: React.FC = () => {
     }
   };
 
-
-  const WelcomeScreen: React.FC = () => {
-    const [randomPrompts, setRandomPrompts] = useState<string[]>([]);
-
-    useEffect(() => {
-        // The t function is typed to return string, but we know it can return an array for this key.
-        const allPrompts = t('chat.welcome.prompts') as unknown as string[];
-        
-        // Shuffle the array and pick the first 3 prompts
-        const shuffled = [...allPrompts].sort(() => 0.5 - Math.random());
-        setRandomPrompts(shuffled.slice(0, 3));
-    }, [t]); // Re-run when language changes
-
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-4">
-        <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-          <Icon name="sparkles" className="w-8 h-8 text-white" />
-        </div>
-        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">{t('chat.welcome.title')}</h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-8">Start a conversation or try one of these prompts.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl">
-          {randomPrompts.map(prompt => (
-              <button key={prompt} onClick={() => setInput(prompt)} className="p-3 bg-gray-200/50 dark:bg-gray-800/50 rounded-lg text-sm text-left hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors h-full">
-                  {prompt}
-              </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
         {messages.length > 0 && (
@@ -228,7 +199,7 @@ const ChatBot: React.FC = () => {
              </div>
         )}
       <div className="flex-1 p-4 md:p-6 space-y-6 overflow-y-auto">
-        {messages.length === 0 ? <WelcomeScreen /> : messages.map((msg, index) => (
+        {messages.length === 0 && input.trim() === '' ? <WelcomeScreen onPromptClick={handleSend} /> : messages.map((msg, index) => (
           <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
             {msg.role === 'model' && (
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center flex-shrink-0">
@@ -277,7 +248,9 @@ const ChatBot: React.FC = () => {
 
       <div className="p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700/50">
         <div className="relative flex items-end">
+          <label htmlFor="chat-input" className="sr-only">{t('chat.placeholder')}</label>
           <textarea
+            id="chat-input"
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
