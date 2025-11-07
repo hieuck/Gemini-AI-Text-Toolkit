@@ -180,14 +180,16 @@ const ChatBot: React.FC = () => {
             rows={1}
             disabled={isLoading}
           />
-          <button
-            onClick={() => handleSend(input)}
-            disabled={isLoading || input.trim() === ''}
-            className="absolute right-2 bottom-2 p-2 rounded-full text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Send message"
-          >
-            <Icon name="send" className="w-5 h-5" />
-          </button>
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2.5">
+            <button
+                onClick={() => handleSend(input)}
+                disabled={isLoading || input.trim() === ''}
+                className="p-2 rounded-full text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Send message"
+            >
+                <Icon name="send" className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
